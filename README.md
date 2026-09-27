@@ -133,6 +133,77 @@ that is itself informative, and this fingerprint baseline is what should be
 reported as the primary model.
 
 ---
+## 3.4 Graph neural network: does a learned representation help?
+
+A directed message-passing neural network (Chemprop v2, default architecture:
+300-dimensional hidden state, depth 3, 30 epochs) was trained on the same task
+— IP and EA jointly — validated the same two ways as the Random Forest
+baseline, and compared directly.
+
+**Results, two independent random seeds:**
+
+| Target | Split | RF R² | GNN R² (seed 42) | GNN R² (seed 7) |
+|---|---|---|---|---|
+| IP | random | 0.823 | 0.939 | 0.933 |
+| IP | scaffold | 0.764 | 0.941 | 0.915 |
+| EA | random | 0.812 | 0.906 | 0.914 |
+| EA | scaffold | 0.693 | 0.911 | 0.896 |
+
+The GNN outperforms the Random Forest baseline on the scaffold split by
+0.15-0.22 R2, consistently across both seeds -- this is not the result of one
+favourable split.
+
+**The more interesting finding is not the margin, but where it comes from.**
+For the Random Forest, moving from a random split to a scaffold split cost
+0.06 R2 (IP) and 0.12 R2 (EA) -- the expected penalty for a model that partly
+relies on having seen a close structural relative of the test molecule. For
+the GNN, that same gap is **under 0.03 R2 in both directions and both seeds**,
+and for IP at seed 42 the scaffold split score is *higher* than the random
+split. A fixed Morgan fingerprint encodes local atomic environments chosen by
+a hashing scheme with no knowledge of this task; a message-passing network
+learns, from the data itself, which structural features actually predict IP
+and EA -- and that learned representation appears to transfer to unseen
+scaffolds far more readily than the fixed one does.
+
+**Derived conceptual-DFT descriptors** (scaffold split, seed 42):
+
+| Descriptor | RF R2 | GNN R2 |
+|---|---|---|
+| mu | 0.770 | 0.950 |
+| eta | 0.631 | 0.865 |
+| omega | 0.554 | 0.819 |
+
+The same error cascade seen throughout this project -- mu (an average)
+surviving propagated error better than eta and omega (differences) -- appears
+in both models, at a uniformly better level for the GNN. The structural reason
+for the cascade (Section 3.1) does not depend on which model produces IP and
+EA; only the starting accuracy does.
+
+### 3.5 What this means for the pipeline
+
+The Random Forest baseline (Section 3.2) remains useful -- it is cheaper to
+train, requires no GPU, and its result stands on its own. But for the purpose
+this project was built for -- screening a natural-product library and ranking
+candidates for DFT confirmation -- **the GNN is the model to deploy**: it is
+more accurate, and its accuracy degrades far less when applied to chemical
+scaffolds unlike anything in the training set, which is precisely the
+situation a natural-product screen presents.
+
+---
+
+## Reproducing the GNN training
+
+```bash
+pip install chemprop        # pulls in PyTorch and PyTorch Lightning
+python 05_train_gnn.py --smoke-test          # ~1 min, sanity check only
+python 05_train_gnn.py --epochs 30           # full run, ~15-30 min on CPU
+python 05_train_gnn.py --epochs 30 --seed 7  # second seed, for robustness
+```
+
+Model checkpoints (`results/gnn_random/`, `results/gnn_scaffold/`, ~24 MB each)
+are not version-controlled; they regenerate deterministically from the seed.
+`results/gnn_metrics.csv` and the prediction CSVs are.
+
 
 ## 4. Reproducing this work
 
