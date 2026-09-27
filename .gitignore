@@ -1,0 +1,3 @@
+
+# --- trained models: regenerate with 04_train_baseline.py (seed=42) ---
+results/*.joblib

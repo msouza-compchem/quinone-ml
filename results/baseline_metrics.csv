@@ -1,0 +1,5 @@
+r2,mae,target,split,n_train,n_test
+0.823,0.136,ip,random,9142,2286
+0.764,0.17,ip,scaffold,8968,2460
+0.812,0.103,ea,random,9142,2286
+0.693,0.131,ea,scaffold,8968,2460
