@@ -1,3 +1,8 @@
 
 # --- trained models: regenerate with 04_train_baseline.py (seed=42) ---
 results/*.joblib
+
+# --- GNN checkpoints: regenerate with 05_train_gnn.py (seed=42 or 7) ---
+results/gnn_random/
+results/gnn_scaffold/
+data/gnn_splits/
